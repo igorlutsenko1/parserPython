@@ -21,22 +21,30 @@ def main():
     action_button.click()
     time.sleep(10)
     teams = driver.find_elements_by_class_name('style_col3__1pR1d')
-    print(teams)
-    print(len(teams))
     teams[4].click()
     bar = driver.find_elements_by_class_name('style_titleText__jlbrV')
     values = driver.find_elements_by_class_name('label')
     prices = driver.find_elements_by_class_name('price')
 
     print(bar[0].text)
+    variable = 1
 
     for i in values:
+
         meta = values.index(i)
 
-
-        print(f"{i.text} - {prices[meta].text}")
-
-
+        if meta % 2 == 0 and meta > 3:
+            print(bar[variable].text)
+            order = i.text
+            order_price = prices[meta].text
+            variable += 1
+        elif meta % 2 != 0 and meta > 3:
+            print(f"{order} - {order_price}  ||  {i.text} - {prices[meta].text}")
+            print()
+        else:
+            print(f"{i.text} - {prices[meta].text}")
+            if meta > 2:
+                print()
 
     time.sleep(25)
     driver.quit()
@@ -49,7 +57,4 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except:
-        main()
+    main()

@@ -10,7 +10,7 @@ db = SQLAlchemy(app)
 
 class Team(db.Model):
     __tablename__ = 'Team'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, db.Sequence("seq_street_segment_id"), primary_key=True)
     name = db.Column(db.String(60))
 
 

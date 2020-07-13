@@ -8,17 +8,17 @@ import time
 
 
 def main():
-
-    path = input("Укажите путь до драйвера оперы, например C:\\Users\\lutse\\Desktop\\try\\Library\\operadriver.exe: ")
+    path = input("Укажите путь до драйвера оперы,"
+                 " например C:\\Users\\lutse\\Desktop\\try\\Library\\operadriver.exe: ")
     name = getpass.getuser()
-    discipline = input("По какой дисциплине парсить данные? csgo / dota: ")
+    discipline = input("По какой дисциплине парсить данные? csgo / dota / legends: ")
     print()
 
     # настраиваем браузер и запускаем первую страницу
     opera_profile = f'C:\\Users\\{name}\\AppData\\Roaming\\Opera Software\\Opera Stable'
     options = webdriver.ChromeOptions()
     options.add_argument('user-data-dir=' + opera_profile)
-    options._binary_location = f'C:\\Users\\{name}\\AppData\\Local\\Programs\Opera\\69.0.3686.57\\opera.exe'
+    options._binary_location = f'C:\\Users\\{name}\\AppData\\Local\\Programs\\Opera\\69.0.3686.57\\opera.exe'
 
     if path:
         driver = webdriver.Opera(executable_path=path,
@@ -31,69 +31,82 @@ def main():
     driver.maximize_window()
     timeout = 10
 
-    # Ждем загрузки основной страницы с матчами
+    # Создаем файл для дальнейшей записи матчей
+    file = open(f'database_pinnacle_{discipline}.txt', 'w', encoding='utf - 16')
+    file.close()
+
+    # Матчи, которые мы уже спарсили
+    completed_matches = []
+
     while True:
 
-        try:
-            element_present = EC.presence_of_all_elements_located((By.CLASS_NAME, 'style_container__uaHPr'))
-            WebDriverWait(driver, timeout).until(element_present)
-            break
-        except TimeoutException:
-            print("Timed out waiting for page to load")
-
-    # все матчи в актуальном
-    list_of_matches = driver.find_elements_by_class_name('style_container__uaHPr')
-    file = open('database_pinnacle.txt', 'w', encoding='utf - 16')
-    file.close()
-    # Проходим по всем матчам
-    counter = 0
-    while counter <= len(list_of_matches) - 1:
-
+        # Ждем загрузки основной страницы
+        refresh_count = 0
         while True:
             try:
+                refresh_count += 1
                 element_present = EC.presence_of_all_elements_located((By.CLASS_NAME, 'style_container__uaHPr'))
                 WebDriverWait(driver, timeout).until(element_present)
                 break
-
             except TimeoutException:
-                print("Timed out waiting for page to load")
+                if refresh_count == 2:
+                    driver.refresh()
+                    refresh_count = 0
+                else:
+                    print("Timed out waiting for page to load")
 
-        all_actual_matches = driver.find_elements_by_class_name('style_container__uaHPr')
-        working_link = all_actual_matches[counter].get_attribute('href')
-        link = working_link.split('/')
-        finding_csgo = []
+        list_of_matches = driver.find_elements_by_class_name('style_container__uaHPr')
+        all_links = [x.get_attribute('href') for x in list_of_matches]
+        all_links_cleared = [x.get_attribute('href') for x in list_of_matches if discipline in x.get_attribute('href')]
 
-        for i in link:
-            new_link = i.split('-')
-            if discipline in new_link:
-                finding_csgo.append(new_link)
+        # Сохраняем названия команд в матче
+        time.sleep(1)
+        category_of_match = driver.find_elements_by_class_name('style_participants__1OLhG')
+        category_of_match = [x.text for x in category_of_match]
+
+        if len(completed_matches) >= len(all_links_cleared):
+            break
+
+        for match_link in all_links_cleared:
+            if match_link not in completed_matches:
+                completed_matches.append(match_link)
+                working_link = match_link
+                driver.get(working_link)
+
+                # Ищем индекс матча в списке, чтобы сохранить полное название команд
+                for elem in all_links:
+                    if elem == working_link:
+                        index = all_links.index(elem)
+                        teams_name = category_of_match[index].splitlines()
+                        break
                 break
+            else:
+                continue
 
-        if finding_csgo:
-            driver.get(working_link)
-        else:
-            counter += 1
-            continue
-
+        refresh_count = 0
         while True:
-
             try:
-                element_present = EC.presence_of_all_elements_located((By.CLASS_NAME, 'style_col3__1pR1d'))
+                refresh_count += 1
+                element_present = EC.presence_of_all_elements_located((By.CLASS_NAME, 'style_grid__5OWBH'))
                 WebDriverWait(driver, timeout).until(element_present)
                 break
             except TimeoutException:
-                print("Timed out waiting for page to load")
+                if refresh_count == 2:
+                    driver.refresh()
+                    refresh_count = 0
+                else:
+                    print("Timed out waiting for page to load")
 
         teams = driver.find_elements_by_class_name('style_flexButton__2bj5t')
         teams = [x for x in teams if len(x.text) != 0]
         teams_checker = [x.text for x in teams if len(x.text) != 0]
 
+        # Проверяем, есть Team в матче
         if 'Teams' not in teams_checker:
-            with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
-                print(f'Парс для матча {counter + 1} не выполнен, нет вкладки Teams', file=f)
+            with open(f'database_pinnacle_{discipline}.txt', 'a', encoding='utf - 16') as f:
+                print(f'Парсинг для матча "{teams_name[0]} VS {teams_name[1]}" не выполнен, нет вкладки Teams', file=f)
                 print('_' * 50, file=f)
             driver.back()
-            counter += 1
             continue
         elif 'Teams' in teams_checker:
             time.sleep(2)
@@ -102,46 +115,69 @@ def main():
             driver.back()
             continue
 
-        with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
-            print(f"Парс для команды {counter + 1} выполнен!", file=f)
+        checker_for_teams = True
+        refresh_count = 0
+        while True:
+            try:
+                refresh_count += 1
+                element_present = EC.presence_of_all_elements_located((By.CLASS_NAME, 'style_container__1MuSF'))
+                WebDriverWait(driver, timeout).until(element_present)
+                break
+            except TimeoutException:
+                if refresh_count == 2:
+                    driver.back()
+                    print(f'Не получилось спарсить линию Teams для "{teams_name[0]} VS {teams_name[1]}"'
+                          f'. Превышено время ожидания')
+                    print()
+                    checker_for_teams = False
+                    break
+                else:
+                    print("Timed out waiting for page to load")
+
+        if checker_for_teams:
+            pass
+        else:
+            continue
+
+        with open(f'database_pinnacle_{discipline}.txt', 'a', encoding='utf - 16') as f:
+            print(f'Парсинг для матча "{teams_name[0]} VS {teams_name[1]}" выполнен!', file=f)
             print(' ', file=f, end='\n')
-        counter += 1
 
         count_for_content = 0
         labels = driver.find_elements_by_class_name('style_title__2Y8r7')
         content = driver.find_elements_by_class_name('style_content__eJ182')
-        teams_name = driver.find_elements_by_class_name('style_participants__3SkHT')
-        teams_name = [x.text for x in teams_name]
-        teams_name = teams_name[0].splitlines()
+        date_time = driver.find_element_by_class_name('style_datetimeContainer__3KXS7').text
         content = [x.text for x in content]
         league_name = driver.find_elements_by_class_name('style_desktop_textLabel__2RMmF')
         league_name = [x.text for x in league_name]
 
-        with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
-            print(f"{teams_name[1]} VS {teams_name[2]}", file=f)
+        with open(f'database_pinnacle_{discipline}.txt', 'a', encoding='utf - 16') as f:
+            print(f"{teams_name[0]} VS {teams_name[1]}", file=f)
             print(f"League - {league_name[2]}", file=f)
+            print(date_time, file=f)
             print(' ', file=f)
 
         for element_label in labels:
-            with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+            with open(f'database_pinnacle_{discipline}.txt', 'a', encoding='utf - 16') as f:
                 print(f"{element_label.text}", file=f)
             content_for_element_label = content[count_for_content].splitlines()
             i = 0
 
             while i + 1 < len(content_for_element_label):
-                with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+                with open(f'database_pinnacle_{discipline}.txt', 'a', encoding='utf - 16') as f:
                     print(f"{content_for_element_label[i]} - {content_for_element_label[i + 1]}", file=f)
                 i += 2
-            with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+
+            with open(f'database_pinnacle_{discipline}.txt', 'a', encoding='utf - 16') as f:
                 print(' ', file=f)
 
             count_for_content += 1
 
-        with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+        with open(f'database_pinnacle_{discipline}.txt', 'a', encoding='utf - 16') as f:
             print('_' * 50, file=f)
         driver.back()
 
-    with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+    with open(f'database_pinnacle_{discipline}.txt', 'a', encoding='utf - 16') as f:
         print(f"Все матчи по {discipline} пройдены и загружены", file=f)
     time.sleep(5)
     driver.quit()

@@ -43,7 +43,8 @@ def main():
 
     # все матчи в актуальном
     list_of_matches = driver.find_elements_by_class_name('style_container__uaHPr')
-
+    file = open('database_pinnacle.txt', 'w', encoding='utf - 16')
+    file.close()
     # Проходим по всем матчам
     counter = 0
     while counter <= len(list_of_matches) - 1:
@@ -77,7 +78,7 @@ def main():
         while True:
 
             try:
-                element_present = EC.presence_of_all_elements_located((By.CLASS_NAME, 'style_flexButton__2bj5t'))
+                element_present = EC.presence_of_all_elements_located((By.CLASS_NAME, 'style_col3__1pR1d'))
                 WebDriverWait(driver, timeout).until(element_present)
                 break
             except TimeoutException:
@@ -88,19 +89,22 @@ def main():
         teams_checker = [x.text for x in teams if len(x.text) != 0]
 
         if 'Teams' not in teams_checker:
-            print(f'Парс для матча {counter + 1} не выполнен, нет вкладки Teams')
-            print('_' * 50)
+            with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+                print(f'Парс для матча {counter + 1} не выполнен, нет вкладки Teams', file=f)
+                print('_' * 50, file=f)
             driver.back()
             counter += 1
             continue
         elif 'Teams' in teams_checker:
+            time.sleep(2)
             teams[-1].click()
         else:
             driver.back()
             continue
 
-        print(f"Парс для команды {counter + 1} выполнен!")
-        print()
+        with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+            print(f"Парс для команды {counter + 1} выполнен!", file=f)
+            print(' ', file=f, end='\n')
         counter += 1
 
         count_for_content = 0
@@ -113,26 +117,32 @@ def main():
         league_name = driver.find_elements_by_class_name('style_desktop_textLabel__2RMmF')
         league_name = [x.text for x in league_name]
 
-        print(f"{teams_name[1]} VS {teams_name[2]}")
-        print(f"League - {league_name[2]}")
-        print()
+        with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+            print(f"{teams_name[1]} VS {teams_name[2]}", file=f)
+            print(f"League - {league_name[2]}", file=f)
+            print(' ', file=f)
 
         for element_label in labels:
-            print(element_label.text)
+            with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+                print(f"{element_label.text}", file=f)
             content_for_element_label = content[count_for_content].splitlines()
             i = 0
 
             while i + 1 < len(content_for_element_label):
-                print(f"{content_for_element_label[i]} - {content_for_element_label[i + 1]}")
+                with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+                    print(f"{content_for_element_label[i]} - {content_for_element_label[i + 1]}", file=f)
                 i += 2
+            with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+                print(' ', file=f)
 
-            print()
             count_for_content += 1
 
-        print('_' * 50)
+        with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+            print('_' * 50, file=f)
         driver.back()
 
-    print(f"Все матчи по {discipline} пройдены и загружены")
+    with open('database_pinnacle.txt', 'a', encoding='utf - 16') as f:
+        print(f"Все матчи по {discipline} пройдены и загружены", file=f)
     time.sleep(5)
     driver.quit()
 

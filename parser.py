@@ -53,7 +53,7 @@ def main():
 
     # Матчи, которые мы уже спарсили
     completed_matches = []
-
+    os.system('cls')
     while True:
 
         # Ждем загрузки основной страницы
@@ -118,7 +118,7 @@ def main():
         teams_checker = [x.text for x in teams if len(x.text) != 0]
         print()
         print(f'Парсим "{teams_name[0]} VS {teams_name[1]}" матч')
-        print(f'Осталось {len(all_links_cleared) - len(completed_matches)} матча(ей)')
+        print(f'Осталось {len(all_links_cleared) - len(completed_matches)} матчей(а)')
         print()
 
         # Проверяем, есть Team в матче

@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import time
+import os
 
 
 def main():
@@ -20,10 +21,19 @@ def main():
     print()
 
     # настраиваем браузер и запускаем первую страницу
-    opera_profile = f'C:\\Users\\lutse\\AppData\\Roaming\\Opera Software\\Opera Stable'
+
+    if opera_prof:
+        opera_profile = opera_prof
+    else:
+        opera_profile = f'C:\\Users\\lutse\\AppData\\Roaming\\Opera Software\\Opera Stable'
+
     options = webdriver.ChromeOptions()
     options.add_argument('user-data-dir=' + opera_profile)
-    options._binary_location = f'C:\\Users\\lutse\\AppData\\Local\\Programs\\Opera\\69.0.3686.57\\opera.exe'
+
+    if browser_opera:
+        options._binary_location = browser_opera
+    else:
+        options._binary_location = f'C:\\Users\\lutse\\AppData\\Local\\Programs\\Opera\\69.0.3686.57\\opera.exe'
 
     if path:
         driver = webdriver.Opera(executable_path=path,
@@ -32,17 +42,7 @@ def main():
         driver = webdriver.Opera(executable_path=f'C:\\Users\\lutse\\Desktop\\try\\Library\\operadriver.exe',
                                  options=options)
 
-    if browser_opera:
-        options._binary_location = browser_opera
-    else:
-        options._binary_location = f'C:\\Users\\lutse\\AppData\\Local\\Programs\\Opera\\69.0.3686.57\\opera.exe'
-
-    if opera_prof:
-        opera_profile = opera_prof
-    else:
-        opera_profile = f'C:\\Users\\lutse\\AppData\\Roaming\\Opera Software\\Opera Stable'
-
-
+    os.system('cls')
     driver.get('https://www.pinnacle.se/ru/esports/matchups/highlights')
     driver.maximize_window()
     timeout = 10
@@ -116,6 +116,10 @@ def main():
         teams = driver.find_elements_by_class_name('style_flexButton__2bj5t')
         teams = [x for x in teams if len(x.text) != 0]
         teams_checker = [x.text for x in teams if len(x.text) != 0]
+        print()
+        print(f'Парсим "{teams_name[0]} VS {teams_name[1]}" матч')
+        print(f'Осталось {len(all_links_cleared) - len(completed_matches)} матча(ей)')
+        print()
 
         # Проверяем, есть Team в матче
         if 'Teams' not in teams_checker:

@@ -3,29 +3,45 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-import getpass
 import time
 
 
 def main():
     path = input("Укажите путь до драйвера оперы,"
                  " например C:\\Users\\lutse\\Desktop\\try\\Library\\operadriver.exe: ")
-    name = getpass.getuser()
+
+    browser_opera = input("Укажите путь до оперы,"
+                 " например 'C:\\Users\\lutse\\AppData\\Local\\Programs\\Opera\\69.0.3686.57\\opera.exe': ")
+
+    opera_prof = input("Укажите путь до профиля оперы,"
+                 " например C:\\Users\\lutse\\AppData\\Roaming\\Opera Software\\Opera Stable: ")
+
     discipline = input("По какой дисциплине парсить данные? csgo / dota / legends: ")
     print()
 
     # настраиваем браузер и запускаем первую страницу
-    opera_profile = f'C:\\Users\\{name}\\AppData\\Roaming\\Opera Software\\Opera Stable'
+    opera_profile = f'C:\\Users\\lutse\\AppData\\Roaming\\Opera Software\\Opera Stable'
     options = webdriver.ChromeOptions()
     options.add_argument('user-data-dir=' + opera_profile)
-    options._binary_location = f'C:\\Users\\{name}\\AppData\\Local\\Programs\\Opera\\69.0.3686.57\\opera.exe'
+    options._binary_location = f'C:\\Users\\lutse\\AppData\\Local\\Programs\\Opera\\69.0.3686.57\\opera.exe'
 
     if path:
         driver = webdriver.Opera(executable_path=path,
                                  options=options)
     else:
-        driver = webdriver.Opera(executable_path=f'C:\\Users\\{name}\\Desktop\\try\\Library\\operadriver.exe',
+        driver = webdriver.Opera(executable_path=f'C:\\Users\\lutse\\Desktop\\try\\Library\\operadriver.exe',
                                  options=options)
+
+    if browser_opera:
+        options._binary_location = browser_opera
+    else:
+        options._binary_location = f'C:\\Users\\lutse\\AppData\\Local\\Programs\\Opera\\69.0.3686.57\\opera.exe'
+
+    if opera_prof:
+        opera_profile = opera_prof
+    else:
+        opera_profile = f'C:\\Users\\lutse\\AppData\\Roaming\\Opera Software\\Opera Stable'
+
 
     driver.get('https://www.pinnacle.se/ru/esports/matchups/highlights')
     driver.maximize_window()
